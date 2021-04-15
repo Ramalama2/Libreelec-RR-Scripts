@@ -17,6 +17,7 @@ LE_BUILD_PLATFORM="x86_64" # x86_64 or RPi4
 LE_NON_FREE_PKG_SUPPORT="yes"
 
 ## -- Generic x86_64 Support -- ##
+LE_TARGET_CPU="x86-64" # x86-64, core2, just read this: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 # Do you want to disable drivers for a smaller/faster booting Libreelec?
 LE_DISABLE_DRIVERS="no"
 # Which drivers you need? Disable with 0!
@@ -93,6 +94,7 @@ function LE_BUILDENV_CHECK {
 	if [ -z "$LE_B_SUM" ]; then echo "INFO: All Build dependencies available!"; return 1; else echo "ERROR: Missing - ${LE_B_SUM[*]}"; return 0; fi
 }
 
+if [[ ! -z "$LE_TARGET_CPU" && "$LE_TARGET_CPU" != "x86-64" ]]; then echo "INFO: Target CPU: $LE_TARGET_CPU"; sed -i "s/TARGET_CPU=.*/TARGET_CPU=\"$LE_TARGET_CPU\"/g" projects/Generic/options; fi
 if [[ "$LE_DISABLE_DRIVERS" == "1" || "$LE_DISABLE_DRIVERS" == "yes" ]]; then LE_DRIVERS_FUNCTION; fi
 if [[ "$LE_BUILD" == "1" || "$LE_BUILD" == "yes" ]]; then
 	if LE_BUILDENV_CHECK; then exit 1; fi
