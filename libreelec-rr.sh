@@ -11,13 +11,13 @@ LE_Folder2Use="$HOME/LibreelecRR"
 # Do you want to build if everything is done?
 LE_BUILD="yes"
 LE_BUILD_BY="Script_v1"
-LE_BUILD_PLATFORM="x86_64" # x86_64 or RPi4
+LE_BUILD_PLATFORM="x86_64" # x86_64 (Generic), RPi4, RK3399
 
 # Allow non-free Packages? (needed for xow)
 LE_NON_FREE_PKG_SUPPORT="yes"
 
 ## -- Generic x86_64 Support -- ##
-LE_TARGET_CPU="x86-64" # x86-64, core2, just read this: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
+LE_TARGET_CPU="core2" # x86-64, core2, just read this: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 # Do you want to disable drivers for a smaller/faster booting Libreelec?
 LE_DISABLE_DRIVERS="no"
 # Which drivers you need? Disable with 0!
@@ -55,12 +55,23 @@ if [[ -z $(which git) ]]; then echo "ERROR: Please install git first!"; exit 1; 
 if [[ $(id -u) == 0 ]]; then echo "ERROR: Building as root is not supported!"; exit 1; fi
 if [ -d "$LE_Folder2Use" ]; then echo "INFO: $LE_Folder2Use update!"
 else echo "INFO: $LE_Folder2Use initialize!"; git clone --branch $LE_Branch $LE_Repo $LE_Folder2Use; fi
-
 cd $LE_Folder2Use
+
+case "$LE_BUILD_PLATFORM" in
+	"x86_64"|"Generic") LE_P_CONFIG_FILE="projects/Generic/options"
+		LE_COMPILE() { PROJECT=Generic ARCH=x86_64 BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; }
+		if [[ ! -z "$LE_TARGET_CPU" && "$LE_TARGET_CPU" != "x86-64" ]]; then echo "INFO: Target CPU: $LE_TARGET_CPU"; sed -i "s/TARGET_CPU=.*/TARGET_CPU=\"$LE_TARGET_CPU\"/g" $LE_P_CONFIG_FILE; fi
+		if [[ "$LE_DISABLE_DRIVERS" == "1" || "$LE_DISABLE_DRIVERS" == "yes" ]]; then LE_DRIVERS_FUNCTION; fi;;
+	"RPi4") LE_P_CONFIG_FILE="projects/RPi/devices/RPi4/options"
+		LE_COMPILE() { PROJECT=RPi DEVICE=RPi4 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
+	"RK3399") LE_P_CONFIG_FILE="projects/Rockchip/devices/RK3399/options"
+		LE_COMPILE() { PROJECT=Rockchip DEVICE=RK3399 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
+	*) echo "ERROR: Platform not Supported!"; exit 1;;
+esac
 
 if [[ "$LE_NON_FREE_PKG_SUPPORT" == "1" || "$LE_NON_FREE_PKG_SUPPORT" == "yes" ]]; then
 #       Enable non-free Support:
-	sed -i "s/NON_FREE_PKG_SUPPORT=.*/NON_FREE_PKG_SUPPORT=\"yes\"/g" projects/Generic/options
+	sed -i "s/NON_FREE_PKG_SUPPORT=.*/NON_FREE_PKG_SUPPORT=\"yes\"/g" $LE_P_CONFIG_FILE
 	echo "INFO: NON_FREE_PKG_SUPPORT enabled!"
 fi
 
@@ -94,14 +105,7 @@ function LE_BUILDENV_CHECK {
 	if [ -z "$LE_B_SUM" ]; then echo "INFO: All Build dependencies available!"; return 1; else echo "ERROR: Missing - ${LE_B_SUM[*]}"; return 0; fi
 }
 
-if [[ ! -z "$LE_TARGET_CPU" && "$LE_TARGET_CPU" != "x86-64" ]]; then echo "INFO: Target CPU: $LE_TARGET_CPU"; sed -i "s/TARGET_CPU=.*/TARGET_CPU=\"$LE_TARGET_CPU\"/g" projects/Generic/options; fi
-if [[ "$LE_DISABLE_DRIVERS" == "1" || "$LE_DISABLE_DRIVERS" == "yes" ]]; then LE_DRIVERS_FUNCTION; fi
 if [[ "$LE_BUILD" == "1" || "$LE_BUILD" == "yes" ]]; then
 	if LE_BUILDENV_CHECK; then exit 1; fi
-	case "$LE_BUILD_PLATFORM" in
-		"x86_64") PROJECT=Generic ARCH=x86_64 BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; exit 0;;
-		"Generic") PROJECT=Generic ARCH=x86_64 BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; exit 0;;
-		"RPi4") PROJECT=RPi DEVICE=RPi4 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; exit 0;;
-		*) echo "ERROR: Platform not Supported!"; exit 1;;
-	esac
+	LE_COMPILE
 fi
