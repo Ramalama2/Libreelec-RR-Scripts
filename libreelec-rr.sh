@@ -1,8 +1,7 @@
 #!/bin/bash
 #
 # Version 1: Simple script to Build LibreELEC-RR 10 by yourself the noob way xD
-# Keep in mind: at the moment there is only x86_64 (Generic) support.
-#
+# 
 # Config:
 LE_Repo="https://github.com/SupervisedThinking/LibreELEC-RR.git"
 LE_Branch="master-rr"
