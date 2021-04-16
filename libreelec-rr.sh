@@ -57,24 +57,6 @@ if [ -d "$LE_Folder2Use" ]; then echo "INFO: $LE_Folder2Use update!"
 else echo "INFO: $LE_Folder2Use initialize!"; git clone --branch $LE_Branch $LE_Repo $LE_Folder2Use; fi
 cd $LE_Folder2Use
 
-case "$LE_BUILD_PLATFORM" in
-	"x86_64"|"Generic") LE_P_CONFIG_FILE="projects/Generic/options"
-		LE_COMPILE() { PROJECT=Generic ARCH=x86_64 BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; }
-		if [[ ! -z "$LE_TARGET_CPU" && "$LE_TARGET_CPU" != "x86-64" ]]; then echo "INFO: Target CPU: $LE_TARGET_CPU"; sed -i "s/TARGET_CPU=.*/TARGET_CPU=\"$LE_TARGET_CPU\"/g" $LE_P_CONFIG_FILE; fi
-		if [[ "$LE_DISABLE_DRIVERS" == "1" || "$LE_DISABLE_DRIVERS" == "yes" ]]; then LE_DRIVERS_FUNCTION; fi;;
-	"RPi4") LE_P_CONFIG_FILE="projects/RPi/devices/RPi4/options"
-		LE_COMPILE() { PROJECT=RPi DEVICE=RPi4 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
-	"RK3399") LE_P_CONFIG_FILE="projects/Rockchip/devices/RK3399/options"
-		LE_COMPILE() { PROJECT=Rockchip DEVICE=RK3399 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
-	*) echo "ERROR: Platform not Supported!"; exit 1;;
-esac
-
-if [[ "$LE_NON_FREE_PKG_SUPPORT" == "1" || "$LE_NON_FREE_PKG_SUPPORT" == "yes" ]]; then
-#       Enable non-free Support:
-	sed -i "s/NON_FREE_PKG_SUPPORT=.*/NON_FREE_PKG_SUPPORT=\"yes\"/g" $LE_P_CONFIG_FILE
-	echo "INFO: NON_FREE_PKG_SUPPORT enabled!"
-fi
-
 function LE_DRIVERS_FUNCTION {
 	LE_CONFIG_OPTIONS=()
 	if [[ "$LE_DRIVER_GPU_AMD" == "0" ]]; then echo "INFO: Disabling AMD GPU!"
@@ -96,6 +78,24 @@ function LE_DRIVERS_FUNCTION {
 		done
 	fi
 }
+
+case "$LE_BUILD_PLATFORM" in
+	"x86_64"|"Generic") LE_P_CONFIG_FILE="projects/Generic/options"
+		LE_COMPILE() { PROJECT=Generic ARCH=x86_64 BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; }
+		if [[ ! -z "$LE_TARGET_CPU" && "$LE_TARGET_CPU" != "x86-64" ]]; then echo "INFO: Target CPU: $LE_TARGET_CPU"; sed -i "s/TARGET_CPU=.*/TARGET_CPU=\"$LE_TARGET_CPU\"/g" $LE_P_CONFIG_FILE; fi
+		if [[ "$LE_DISABLE_DRIVERS" == "1" || "$LE_DISABLE_DRIVERS" == "yes" ]]; then LE_DRIVERS_FUNCTION; fi;;
+	"RPi4") LE_P_CONFIG_FILE="projects/RPi/devices/RPi4/options"
+		LE_COMPILE() { PROJECT=RPi DEVICE=RPi4 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
+	"RK3399") LE_P_CONFIG_FILE="projects/Rockchip/devices/RK3399/options"
+		LE_COMPILE() { PROJECT=Rockchip DEVICE=RK3399 ARCH=arm BUILD_PERIODIC=RR BUILDER_NAME=$LE_BUILD_BY make image; };;
+	*) echo "ERROR: Platform not Supported!"; exit 1;;
+esac
+
+if [[ "$LE_NON_FREE_PKG_SUPPORT" == "1" || "$LE_NON_FREE_PKG_SUPPORT" == "yes" ]]; then
+#       Enable non-free Support:
+	sed -i "s/NON_FREE_PKG_SUPPORT=.*/NON_FREE_PKG_SUPPORT=\"yes\"/g" $LE_P_CONFIG_FILE
+	echo "INFO: NON_FREE_PKG_SUPPORT enabled!"
+fi
 
 function LE_BUILDENV_CHECK {
 	LE_B_SUM=()
