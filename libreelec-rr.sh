@@ -56,7 +56,7 @@ function LE_DRIVERS_FUNCTION {
 	if [ -z "$LE_CONFIG_OPTIONS" ]; then echo "INFO: No Drivers will be disabled!"
 	else
 		for LE_DISABLE_DRIVER in "${LE_CONFIG_OPTIONS[@]}"; do
-			sed -i "/$LE_DISABLE_DRIVER/{s/=[ym]/=n/}" projects/Generic/linux/linux.x86_64.conf
+			sed -i "/$LE_DISABLE_DRIVER[_=]/{s/=[ym]/=n/}" projects/Generic/linux/linux.x86_64.conf
 		done
 	fi
 }
